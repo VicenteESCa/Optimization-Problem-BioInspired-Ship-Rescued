@@ -33,10 +33,10 @@ function [xbest, fbest, conv] = ship_aid(fhd, SearchAgents_no, Max_Iteration, di
     F = 2 * randi([0, 1], SearchAgents_no, 1) - 1;  % Dirección aleatoria
     omega = zeros(SearchAgents_no, 1);  
     delta = zeros(SearchAgents_no, dim);  
-    C_coef = zeros(SearchAgents_no, dim);  
+    % C_coef = zeros(SearchAgents_no, dim);  
     angle = zeros(SearchAgents_no, dim);  
     ship_vel = zeros(SearchAgents_no, dim);  
-    ship_v = zeros(SearchAgents_no, dim);
+    % ship_v = zeros(SearchAgents_no, dim);
     ship_fitness_new = zeros(SearchAgents_no, 1);
     
     % --- 4. Inicialización de posiciones y fitness ---
@@ -45,6 +45,7 @@ function [xbest, fbest, conv] = ship_aid(fhd, SearchAgents_no, Max_Iteration, di
     for i = 1:SearchAgents_no
         ship_fitness(i) = fhd(ship_pos(i,:));
     end
+
     ship_pos_new = ship_pos;
     
     % --- 5. Inicializar MEJOR solución global ---
@@ -77,12 +78,12 @@ function [xbest, fbest, conv] = ship_aid(fhd, SearchAgents_no, Max_Iteration, di
             % Actualización de parámetros
             c = -2 + 4 * rand(SearchAgents_no, 1);
             delta = c .* F .* angle;
-            C_coef = (omega - k * delta(:,1)) ./ exp(-iter / T);
-            omega = C_coef(:, 1) .* exp(-iter / T) + k * delta(:, 1);
+            %C_coef = (omega - k * delta(:,1)) ./ exp(-iter / T);
+            omega = omega + k * delta(:,1);
             
             % Actualización de velocidad y posición
             ship_vel = ship_vel + omega .* (ub - lb) .* randn(SearchAgents_no, dim);
-            ship_pos_new = ship_pos + ship_vel + delta .* randn(SearchAgents_no, dim) .* (xbest - ship_pos);
+            ship_pos_new = ship_pos + C * (ship_vel + delta .* randn(SearchAgents_no, dim) .* (xbest - ship_pos));
             ship_pos_new = max(min(ship_pos_new, ub), lb);
             
             % ============================================
@@ -114,17 +115,17 @@ function [xbest, fbest, conv] = ship_aid(fhd, SearchAgents_no, Max_Iteration, di
                     group(g).pos = ship_pos(current_indices, :);
                     group(g).fitness = ship_fitness(current_indices);
                     
-                    [group(g).fbest, bestIdx] = min(group(g).fitness);
-                    group(g).xbest = group(g).pos(bestIdx, :);
+                    [group(g).fbest, bestIndice] = min(group(g).fitness);
+                    group(g).xbest = group(g).pos(bestIndice, :);
                     
                     [~, worstIdx] = sort(group(g).fitness, 'descend');
                     worst = worstIdx(1:ceil(length(current_indices)/3));
                     
-                    c1 = 2 * rand;
-                    c2 = 2 * rand;
+                    Com1 = K_com * rand;
+                    c2 = K_com * rand;
                     for w = 1:length(worst)
                         group(g).pos(worst(w), :) = group(g).pos(worst(w), :) + ...
-                            c1 * (group(g).xbest - group(g).pos(worst(w), :)) + ...
+                            Com1 * (group(g).xbest - group(g).pos(worst(w), :)) + ...
                             c2 * (xbest - group(g).pos(worst(w), :));
                         group(g).fitness(worst(w)) = fhd(group(g).pos(worst(w), :));
                     end

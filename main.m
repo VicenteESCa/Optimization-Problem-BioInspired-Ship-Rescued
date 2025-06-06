@@ -30,15 +30,15 @@ Max_Iteration = 1000;
 ul_res = zeros(1, Max_Iteration);  % Solo 1 fila para 1 problema
 res = inf(30, Max_Iteration);    % 30 ejecuciones independientes
 best_global = inf;               % Mejor fitness global
-
+Max_Iter=500
 % 4. Ejecución principal
 fprintf('Iniciando optimización para Speed Reducer (dim=%d)...\n', dim);
-for i = 1:30  % Corregido a 30 iteraciones
+for i = 1:Max_Iter  % Corregido a 30 iteraciones
     try
         [~, ~, His_Fit] = ship_aid(fhd, SearchAgents_no, Max_Iteration, dim, lb, ub);
         res(i, :) = His_Fit;
         current_best = His_Fit(end);
-        fprintf('Ejecución %d/30 completada - Mejor fitness: %f\n', i, current_best);
+        fprintf('Ejecución %d/%d completada - Mejor fitness: %f\n', i,Max_Iter, current_best);
         
         % Actualizar mejor fitness global
         if current_best < best_global
